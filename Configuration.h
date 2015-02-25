@@ -13,9 +13,9 @@ const string WELD_GCODE = "./weld.gcode";
 const string CUT_GCODE  = "./cut.gcode";
 const double LAYER_THICKNESS = 0.1;		// mm, thickness of each layer
 
-//=========================================================================
-//================================= Scanner ===============================
-//=========================================================================
+// ========================================================================
+// ================================ Scanner ===============================
+// ========================================================================
 
 const UINT			ResetCompletely(UINT_MAX);
 const LONG			R(20000L);
@@ -34,11 +34,21 @@ const UINT 			LaserOffDelay(100U*1U);
 const UINT 			JumpDelay(250U/10U);
 const UINT 			MarkDelay(100U/10U);
 const UINT 			PolygonDelay(50U/10U);
-const double 		MarkSpeed(250.0);
+const double 		MarkSpeed(50.0);
 const double 		JumpSpeed(1000.0);
 
 struct locus		{ long xval, yval; };
 const locus BeamDump = { -32000, -32000 };
 
+// =========================================================================
+// ============================ Motion Stage ===============================
+// =========================================================================
+
+// A constant translation between welding coord center and cutting coord center.
+const double 		X_DISPLACEMENT = 180.1;
+const double 		Y_DISPLACEMENT = 25.5;
+const double 		Z_DISPLACEMENT = 15.3;
+
 
 #endif //CONFIGURATION_H
+

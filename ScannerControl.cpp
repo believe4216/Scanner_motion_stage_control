@@ -1,4 +1,8 @@
+
+#include <windows.h>
 #include "ScannerControl.h"
+
+using namespace std;
 
 // ---- Initialize the RTC5 Scanner board
 int  initializeScanner(void)
@@ -116,23 +120,58 @@ int  initializeScanner(void)
 
     execute_list( 1U );
 
+    // Wait for the execution of list 1 finishing, and to be vailable again.
+    while ( !load_list(1U, 0U) ) ;
+    //Sleep(100);
+
+
     return 0;
 }
 
 // ---- Process a line gcode
-// execute == 0 : Just write command in list memory
-// execute == 1 : Write current command and execute list memory
 // mark == 0 : Jump
 // mark == 1 : Mark
-void processCommand(int execute, int mark, int g_num, double x_num, double y_num, double f_num)
+void loadCommand(int mark, int g_num, double x_num, double y_num, double f_num)
 {
-	// Write the current command
+	// Convert the coords in GCODE to the coords for SCANNER
+	LONG x_val, y_val;
+	double f_val;
+	convertCoords(x_num, y_num, f_num, x_val, y_val, f_val);
 
-	if ( execute == 0 )
-		return;
+	if ( mark == 0 ) {			// Jump Command
+		jump_abs( x_val, y_val );
+		printf( "J" );
+	}
+	else {
+		// Check marking speed:
+		// if marking speed changed, set a new marking speed
+		if ( g_num == 1 )		// Mark lines
+			mark_abs( x_val, y_val);
+		if ( g_num == 2 )		// Mark Arcs
+			;
+		if ( g_num == 3 )		// Mark Arcs
+			;
+		printf( "M" );
+	}
 
-	// Execute the list memory
-	
+}
+
+// Execute list memory (Only use list 1)
+void executeList(void)
+{
+	set_end_of_list();
+	execute_list(1U);
+	printf( "X" );
+	//Sleep(100);
+	// Wait for the execution of list being finished, and being available again
+	while ( !load_list(1U, 0U ) );
+}
+
+void convertCoords(double x_num, double y_num, double f_num, LONG &x_val, LONG &y_val, double &f_val)
+{
+	x_val = (long)( 500 * x_num );
+	y_val = (long)( 500 * y_num );
+	f_val = f_num;
 }
 
 // ---- The function waits for a keyboard hit

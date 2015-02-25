@@ -18,8 +18,8 @@ int processGcode()
 
 	weldRead.open(WELD_GCODE);
 	cutRead.open(CUT_GCODE);
-	weldWrite.open("./welding.dat");
-	cutWrite.open("./cutting.dat");
+	weldWrite.open("./data_welding.txt");
+	cutWrite.open("./data_cutting.txt");
 
 	// =============== Process Welding Gcode ==================
 	while ( ! weldRead.eof() ) {
@@ -36,7 +36,12 @@ int processGcode()
 			abs(extractDouble(commandString, 'Z')) < DEL )
 			continue;
 
-		// 3: Find the first GCODE of the first layer
+		// 3: Find the first Jump command from GCODE
+		if ( layerNumber == 0 && 
+			abs(extractDouble(commandString, 'X')) + abs(extractDouble(commandString, 'Y')) > DEL )
+			writeCommand(weldWrite, commandString);
+
+		// 4: Find the first GCODE of the first layer
 		if ( layerNumber == 0 &&
 			abs(extractDouble(commandString, 'Z') - LAYER_THICKNESS ) > DEL )
 			continue;
@@ -45,7 +50,7 @@ int processGcode()
 			writeCommand(weldWrite, commandString);
 		}
 
-		// 4: Find the first GCODEs in each of the subsequent layers
+		// 5: Find the first GCODEs in each of the subsequent layers
 		if ( abs(extractDouble(commandString, 'Z')) > DEL &&
 			abs(extractDouble(commandString, 'Z') - (layerNumber + 1) * LAYER_THICKNESS ) > DEL )
 			continue;
@@ -54,7 +59,7 @@ int processGcode()
 			weldWrite << -1 << endl; // command for execute list memory
 		}
 
-		// 5: Process other ordinary commands
+		// 6: Process other ordinary commands
 		writeCommand(weldWrite, commandString);
 	}
 	weldWrite << -1 << endl; // execute command for the last layer
@@ -82,7 +87,12 @@ int processGcode()
 			abs(extractDouble(commandString, 'Z')) < DEL )
 			continue;
 
-		// 3: Find the first GCODE of the first layer
+		// 3: Find the first Jump command from GCODE
+		if ( layerNumber == 0 &&
+			abs(extractDouble(commandString, 'X')) + abs(extractDouble(commandString, 'Y')) > DEL )
+			writeCommand(cutWrite, commandString);
+
+		// 4: Find the first GCODE of the first layer
 		if ( layerNumber == 0 &&
 			abs(extractDouble(commandString, 'Z') - LAYER_THICKNESS ) > DEL )
 			continue;
@@ -91,7 +101,7 @@ int processGcode()
 			writeCommand(cutWrite, commandString);
 		}
 
-		// 4: Find the first GCODEs in each of the subsequent layers
+		// 5: Find the first GCODEs in each of the subsequent layers
 		if ( abs(extractDouble(commandString, 'Z')) > DEL &&
 			abs(extractDouble(commandString, 'Z') - (layerNumber + 1) * LAYER_THICKNESS ) > DEL )
 			continue;
@@ -100,7 +110,7 @@ int processGcode()
 			cutWrite << -1 << endl; // command for execute list memory
 		}
 
-		// 5: Process other ordinary gcode
+		// 6: Process other ordinary gcode
 		writeCommand(cutWrite, commandString);
 	}
 	cutWrite << -1 << endl;
@@ -118,7 +128,6 @@ int processGcode()
 
 	return 1;
 }
-
 
 
 // Get a integer number following the specified character from a command string
@@ -141,6 +150,9 @@ double extractDouble(const string commandStr, char cha)
 
 void writeCommand(ofstream &output, string &commandString)
 {
+	// if the command doesn't contain X, Y, return;
+	if ( abs(extractDouble(commandString, 'X')) < DEL && abs(extractDouble(commandString, 'Y')) < DEL )
+		return;
 	// is or isn't a marking command
 	if ( abs(extractDouble(commandString, 'E')) > DEL )
 		output << 1;	// Marking
@@ -153,3 +165,4 @@ void writeCommand(ofstream &output, string &commandString)
 			<< setw(10) << extractDouble(commandString, 'Z')
 			<< setw(10) << extractDouble(commandString, 'F') << endl;
 }
+

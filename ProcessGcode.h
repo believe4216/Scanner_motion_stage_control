@@ -13,3 +13,4 @@ double 	extractDouble(const string commandStr, char cha);
 void 	writeCommand(ofstream &output, string &commandString);
 
 #endif // PROCESS_GCODE_H
+
